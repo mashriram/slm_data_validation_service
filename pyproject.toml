@@ -12,3 +12,9 @@ dependencies = [
 "python-multipart",
 "httpx",
 ]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+]
