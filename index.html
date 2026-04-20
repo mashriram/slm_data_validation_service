@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Universe | Interactive Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --space-bg: #030712;
+            --git-purple: #8b5cf6;
+            --git-blue: #3b82f6;
+            --git-green: #10b981;
+            --git-orange: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--space-bg);
+            color: #f3f4f6;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, .font-space {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Animated Star Background */
+        .star-bg {
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            animation: bgScroll 100s linear infinite;
+        }
+
+        @keyframes bgScroll {
+            0% { background-position: 0 0, 40px 60px, 130px 270px; }
+            100% { background-position: 550px 550px, 390px 410px, 380px 520px; }
+        }
+
+        .glass {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.15);
+        }
+
+        /* Scroll Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030712;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        /* Terminal Blinking Cursor */
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Command snippet styling */
+        .cmd-block {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cmd-block::before {
+            content: '$';
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .cmd-block.multi-line::before {
+            top: 2rem; /* Adjust for multiline commands with headers */
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--git-green);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="star-bg">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle mr-2"></i> Copied to clipboard!
+    </div>
+
+    <!-- Hero Section -->
+    <header class="min-h-screen flex items-center justify-center relative overflow-hidden px-4">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/50 to-gray-950 z-0"></div>
+        
+        <div class="container mx-auto z-10 text-center reveal active">
+            <div class="inline-block p-2 px-6 glass mb-6 text-sm font-semibold tracking-widest text-blue-400 uppercase border-blue-500/30">
+                <i class="fas fa-satellite mr-2"></i> Interactive GitHub Workshop 2026
+            </div>
+            <h1 class="text-6xl md:text-8xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+                Master the <br> Git Universe
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-400 mb-10 max-w-2xl mx-auto">
+                Stop fearing the command line. Learn to time-travel, branch realities, resolve conflicts, and collaborate seamlessly.
+            </p>
+            
+            <div class="flex flex-col md:flex-row gap-6 justify-center items-center mb-12">
+                <div class="flex items-center gap-4 glass p-4 px-8 glass-card">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/30">S</div>
+                    <div class="text-left">
+                        <div class="text-xs text-blue-300 font-bold tracking-wider uppercase">Presenter</div>
+                        <div class="font-bold text-lg">M A Shriram</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 glass p-4 px-8 glass-card">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center font-bold text-xl shadow-lg shadow-purple-500/30">H</div>
+                    <div class="text-left">
+                        <div class="text-xs text-purple-300 font-bold tracking-wider uppercase">Presenter</div>
+                        <div class="font-bold text-lg">J V K Hem</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#simulator" class="bg-blue-600 text-white px-8 py-4 rounded-lg font-bold hover:bg-blue-500 transition-all transform hover:-translate-y-1 flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                    <i class="fas fa-terminal"></i> Try Simulator
+                </a>
+                <a href="#cheatsheet" class="glass px-8 py-4 rounded-lg font-bold hover:bg-white/10 transition-all flex items-center gap-2 border-gray-600">
+                    <i class="fas fa-book"></i> Command Hub
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Interactive Terminal Simulator Section -->
+    <section id="simulator" class="py-24 px-4 relative">
+        <div class="container mx-auto max-w-6xl reveal">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">Interactive Git Simulator</h2>
+                <p class="text-gray-400 text-lg">Click the actions below to see real terminal outputs and workflows.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+                <!-- Action Buttons -->
+                <div class="lg:col-span-4 space-y-3">
+                    <div class="text-sm font-bold text-gray-500 uppercase tracking-widest mb-4 ml-2">Choose Action</div>
+                    
+                    <button onclick="simulateGit('init')" class="w-full text-left glass p-4 rounded-lg hover:bg-white/5 hover:border-blue-500/50 transition-all group">
+                        <div class="font-bold text-blue-400 mb-1 group-hover:text-blue-300">1. Initialize Repository</div>
+                        <div class="text-sm text-gray-400">Start tracking a new project</div>
+                    </button>
+                    
+                    <button onclick="simulateGit('add')" class="w-full text-left glass p-4 rounded-lg hover:bg-white/5 hover:border-yellow-500/50 transition-all group">
+                        <div class="font-bold text-yellow-400 mb-1 group-hover:text-yellow-300">2. Stage Changes</div>
+                        <div class="text-sm text-gray-400">Prepare files for a commit</div>
+                    </button>
+                    
+                    <button onclick="simulateGit('commit')" class="w-full text-left glass p-4 rounded-lg hover:bg-white/5 hover:border-green-500/50 transition-all group">
+                        <div class="font-bold text-green-400 mb-1 group-hover:text-green-300">3. Create Commit</div>
+                        <div class="text-sm text-gray-400">Save a snapshot of your files</div>
+                    </button>
+                    
+                    <button onclick="simulateGit('branch')" class="w-full text-left glass p-4 rounded-lg hover:bg-white/5 hover:border-purple-500/50 transition-all group">
+                        <div class="font-bold text-purple-400 mb-1 group-hover:text-purple-300">4. Create Branch</div>
+                        <div class="text-sm text-gray-400">Make a safe parallel reality</div>
+                    </button>
+
+                    <button onclick="simulateGit('push')" class="w-full text-left glass p-4 rounded-lg hover:bg-white/5 hover:border-cyan-500/50 transition-all group">
+                        <div class="font-bold text-cyan-400 mb-1 group-hover:text-cyan-300">5. Push to Remote</div>
+                        <div class="text-sm text-gray-400">Upload your commits to GitHub</div>
+                    </button>
+                    
+                    <button onclick="simulateGit('merge')" class="w-full text-left glass p-4 rounded-lg hover:bg-white/5 hover:border-pink-500/50 transition-all group relative overflow-hidden">
+                        <div class="absolute right-0 top-0 text-3xl opacity-10 text-pink-500 -mt-2"><i class="fas fa-bolt"></i></div>
+                        <div class="font-bold text-pink-400 mb-1 group-hover:text-pink-300">6. Merge & Resolve Conflict!</div>
+                        <div class="text-sm text-gray-400">Simulate a conflict and its fix</div>
+                    </button>
+                </div>
+
+                <!-- Fake Terminal -->
+                <div class="lg:col-span-8">
+                    <div class="rounded-xl overflow-hidden border border-gray-700 shadow-2xl bg-[#0d1117] h-full flex flex-col">
+                        <!-- Terminal Header -->
+                        <div class="bg-[#161b22] px-4 py-3 flex items-center border-b border-gray-700">
+                            <div class="flex gap-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="mx-auto text-xs text-gray-400 font-mono">workshop@git-universe:~</div>
+                        </div>
+                        <!-- Terminal Body -->
+                        <div class="p-6 font-mono text-sm md:text-base h-[480px] overflow-y-auto" id="terminal-screen">
+                            <div class="text-green-400 mb-4">Welcome to Git Universe Terminal.</div>
+                            <div class="text-gray-400 mb-4">Click an action on the left to begin the simulation...</div>
+                            <div id="terminal-content"></div>
+                            <div class="mt-2 flex">
+                                <span class="text-blue-400 mr-2 shrink-0">workshop@git-universe:~$</span>
+                                <span id="terminal-typing" class="text-white whitespace-pre-wrap"></span><span class="cursor-blink inline-block w-2 h-5 bg-white align-middle ml-1"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Daily Workflow -->
+    <section class="py-24 px-4 bg-gray-900/40 relative border-y border-white/5">
+        <div class="container mx-auto max-w-6xl reveal">
+            <h2 class="text-4xl md:text-5xl font-bold text-center mb-16">The Essential Workflow</h2>
+            
+            <div class="grid lg:grid-cols-4 gap-6">
+                <!-- Card 1 -->
+                <div class="glass p-6 glass-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <i class="fas fa-folder-open text-6xl"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-xl text-gray-400 border border-gray-600 mb-6">1</div>
+                    <h3 class="text-2xl font-bold mb-2">Working Dir</h3>
+                    <p class="text-gray-400 text-sm mb-6 h-12">Where you edit, delete, and create your files locally.</p>
+                    
+                    <div class="cmd-block pl-10 pr-12 py-3">
+                        <code class="text-green-400 font-bold text-lg">git status</code>
+                        <button onclick="copyText('git status')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-2" title="Copy">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass p-6 glass-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <i class="fas fa-box text-6xl text-yellow-500"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-yellow-900/50 flex items-center justify-center text-xl text-yellow-400 border border-yellow-700/50 mb-6">2</div>
+                    <h3 class="text-2xl font-bold mb-2">Staging Area</h3>
+                    <p class="text-gray-400 text-sm mb-6 h-12">Putting files in the "box" before sealing them.</p>
+                    
+                    <div class="cmd-block pl-10 pr-12 py-3">
+                        <code class="text-yellow-400 font-bold text-lg">git add .</code>
+                        <button onclick="copyText('git add .')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-2" title="Copy">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass p-6 glass-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <i class="fas fa-camera text-6xl text-purple-500"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-purple-900/50 flex items-center justify-center text-xl text-purple-400 border border-purple-700/50 mb-6">3</div>
+                    <h3 class="text-2xl font-bold mb-2">Local Repo</h3>
+                    <p class="text-gray-400 text-sm mb-6 h-12">Taking a permanent snapshot of the staged files.</p>
+                    
+                    <div class="cmd-block pl-10 pr-12 py-3">
+                        <code class="text-purple-400 font-bold text-lg">git commit -m</code>
+                        <button onclick="copyText('git commit -m \'initial commit\'')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-2" title="Copy">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="glass p-6 glass-card relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                        <i class="fas fa-cloud text-6xl text-blue-500"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-blue-900/50 flex items-center justify-center text-xl text-blue-400 border border-blue-700/50 mb-6">4</div>
+                    <h3 class="text-2xl font-bold mb-2">Remote Repo</h3>
+                    <p class="text-gray-400 text-sm mb-6 h-12">Uploading your history to GitHub to share & backup.</p>
+                    
+                    <div class="cmd-block pl-10 pr-12 py-3">
+                        <code class="text-blue-400 font-bold text-lg">git push</code>
+                        <button onclick="copyText('git push origin main')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-2" title="Copy">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Branching Deep Dive -->
+    <section class="py-24 px-4 relative overflow-hidden">
+        <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent -translate-x-1/2 z-0"></div>
+        
+        <div class="container mx-auto max-w-5xl relative z-10 reveal">
+            <div class="text-center mb-16 glass inline-block px-10 py-8 mx-auto w-full backdrop-blur-xl border-purple-500/30 shadow-xl">
+                <i class="fas fa-code-branch text-5xl text-purple-500 mb-4"></i>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">Parallel Universes (Branching)</h2>
+                <p class="text-gray-300 text-lg max-w-2xl mx-auto">
+                    Never experiment directly on the <code class="bg-gray-800 px-2 py-1 rounded text-blue-400 font-mono">main</code> branch! 
+                    Create branches to work safely without affecting production code.
+                </p>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Branch Command 1 -->
+                <div class="glass p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 glass-card">
+                    <div class="flex-1">
+                        <h4 class="text-2xl font-bold text-purple-400 mb-2">1. List / Create Branches</h4>
+                        <p class="text-gray-400 mb-4">View all branches, or create a new one without switching to it.</p>
+                    </div>
+                    <div class="flex-1 w-full space-y-3">
+                        <div class="cmd-block pl-10 pr-12 py-4">
+                            <code class="text-white font-bold text-lg">git branch</code>
+                            <button onclick="copyText('git branch')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-2"><i class="far fa-copy"></i></button>
+                        </div>
+                        <div class="cmd-block pl-10 pr-12 py-4">
+                            <code class="text-purple-300 font-bold text-lg">git branch &lt;name&gt;</code>
+                            <button onclick="copyText('git branch feature-login')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-2"><i class="far fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Branch Command 2 -->
+                <div class="glass p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 glass-card">
+                    <div class="flex-1">
+                        <h4 class="text-2xl font-bold text-blue-400 mb-2">2. Switch Branches</h4>
+                        <p class="text-gray-400 mb-4">Move your working directory to a different timeline. <code class="text-sm bg-gray-800 px-1 rounded font-mono">switch</code> is the modern version of <code class="text-sm bg-gray-800 px-1 rounded font-mono">checkout</code>.</p>
+                    </div>
+                    <div class="flex-1 w-full space-y-3">
+                        <div class="cmd-block pl-10 pr-12 py-4">
+                            <code class="text-blue-300 font-bold text-lg">git switch &lt;name&gt;</code>
+                            <button onclick="copyText('git switch main')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-2"><i class="far fa-copy"></i></button>
+                        </div>
+                        <div class="cmd-block multi-line pl-10 pr-12 py-4 border-l-4 border-green-500">
+                            <div class="text-xs text-green-400 mb-1 absolute top-2 left-10 font-sans tracking-wide">PRO-TIP: CREATE & SWITCH SIMULTANEOUSLY</div>
+                            <code class="text-white font-bold text-lg mt-3 block">git checkout -b &lt;name&gt;</code>
+                            <button onclick="copyText('git checkout -b new-feature')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-2"><i class="far fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Branch Command 3 -->
+                <div class="glass p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 glass-card border-b-4 border-pink-500">
+                    <div class="flex-1">
+                        <h4 class="text-2xl font-bold text-pink-400 mb-2">3. Merge Branches</h4>
+                        <p class="text-gray-400 mb-4">Combine the completed feature branch back into the main branch. (Ensure you are ON the branch you want to merge INTO).</p>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <div class="cmd-block pl-10 pr-12 py-4">
+                            <code class="text-pink-300 font-bold text-lg">git merge &lt;name&gt;</code>
+                            <button onclick="copyText('git merge feature-login')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white p-2"><i class="far fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Cheat Sheet Tabs -->
+    <section id="cheatsheet" class="py-24 px-4 bg-gray-950/80 border-t border-gray-800">
+        <div class="container mx-auto max-w-5xl reveal">
+            <h2 class="text-4xl font-bold text-center mb-10">Command Hub Cheatsheet</h2>
+            
+            <div class="glass overflow-hidden rounded-xl border border-gray-700 shadow-2xl">
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-700 bg-gray-900/80 overflow-x-auto hide-scrollbar">
+                    <button class="tab-btn active flex-1 py-4 px-6 text-center font-bold text-blue-400 border-b-2 border-blue-500 whitespace-nowrap hover:bg-white/5 transition-colors" data-target="tab-setup">
+                        <i class="fas fa-cog mr-2"></i> Setup & Config
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-center font-bold text-gray-400 border-b-2 border-transparent whitespace-nowrap hover:bg-white/5 transition-colors" data-target="tab-basic">
+                        <i class="fas fa-layer-group mr-2"></i> Snapshotting
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-center font-bold text-gray-400 border-b-2 border-transparent whitespace-nowrap hover:bg-white/5 transition-colors" data-target="tab-sync">
+                        <i class="fas fa-sync-alt mr-2"></i> Sync / Share
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-center font-bold text-gray-400 border-b-2 border-transparent whitespace-nowrap hover:bg-white/5 transition-colors" data-target="tab-troubleshoot">
+                        <i class="fas fa-wrench mr-2"></i> Undo & Troubleshoot
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6 md:p-8 bg-[#0a0f1a]">
+                    
+                    <!-- Setup Tab -->
+                    <div id="tab-setup" class="tab-pane block space-y-6">
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Set your global username:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-blue-300 font-bold text-base md:text-lg">git config --global user.name "[name]"</code>
+                                <button onclick="copyText('git config --global user.name \'Your Name\'')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Set your global email:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-blue-300 font-bold text-base md:text-lg">git config --global user.email "[email]"</code>
+                                <button onclick="copyText('git config --global user.email \'your.email@example.com\'')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Initialize a local repository in current folder:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-green-300 font-bold text-base md:text-lg">git init</code>
+                                <button onclick="copyText('git init')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Clone an existing repository from URL:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-green-300 font-bold text-base md:text-lg">git clone [url]</code>
+                                <button onclick="copyText('git clone https://github.com/user/repo.git')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Basic Tab -->
+                    <div id="tab-basic" class="tab-pane hidden space-y-6">
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Show modified files in working directory (Crucial!):</p>
+                            <div class="cmd-block pl-10 pr-12 py-3 border-l-4 border-yellow-500">
+                                <code class="text-yellow-300 font-bold text-base md:text-lg">git status</code>
+                                <button onclick="copyText('git status')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Add specific file to staging area:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-yellow-300 font-bold text-base md:text-lg">git add [file]</code>
+                                <button onclick="copyText('git add index.html')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Add ALL modified files to staging area:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-yellow-300 font-bold text-base md:text-lg">git add .</code>
+                                <button onclick="copyText('git add .')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Commit staged files with a message:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-purple-300 font-bold text-base md:text-lg">git commit -m "[descriptive message]"</code>
+                                <button onclick="copyText('git commit -m \'Fix navigation bug\'')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sync Tab -->
+                    <div id="tab-sync" class="tab-pane hidden space-y-6">
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Add remote repository URL (connect local to cloud):</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-blue-300 font-bold text-base md:text-lg">git remote add origin [url]</code>
+                                <button onclick="copyText('git remote add origin https://github.com/user/repo.git')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Upload local branch commits to remote repository:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3 border-l-4 border-blue-500">
+                                <code class="text-blue-300 font-bold text-base md:text-lg">git push origin [branch-name]</code>
+                                <button onclick="copyText('git push origin main')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Fetch and merge remote commits to your local branch:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-green-300 font-bold text-base md:text-lg">git pull origin [branch-name]</code>
+                                <button onclick="copyText('git pull origin main')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Undo / Troubleshoot Tab -->
+                    <div id="tab-troubleshoot" class="tab-pane hidden space-y-6">
+                        
+                        <!-- The new git reset HEAD~1 command -->
+                        <div>
+                            <p class="text-orange-400 mb-2 font-semibold">Reverse the last commit (keeps changes in working directory):</p>
+                            <div class="cmd-block multi-line pl-10 pr-12 py-4 border-l-4 border-orange-500 bg-orange-950/20">
+                                <div class="text-xs text-orange-400 mb-1 absolute top-2 left-10 font-sans tracking-wide">"OH NO, I COMMITTED TOO EARLY!"</div>
+                                <code class="text-orange-300 font-bold text-base md:text-lg mt-3 block">git reset HEAD~1</code>
+                                <button onclick="copyText('git reset HEAD~1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-2 ml-1"><i class="fas fa-info-circle mr-1"></i> This removes the commit from history, but your code remains exactly as it was. You can make fixes and commit again.</p>
+                        </div>
+
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Show commit history log:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-purple-300 font-bold text-base md:text-lg">git log --oneline</code>
+                                <button onclick="copyText('git log --oneline')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 mb-2 font-semibold">Unstage a file (keep changes, just remove from the "box"):</p>
+                            <div class="cmd-block pl-10 pr-12 py-3">
+                                <code class="text-gray-300 font-bold text-base md:text-lg">git restore --staged [file]</code>
+                                <button onclick="copyText('git restore --staged file.txt')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-red-400 mb-2 font-semibold">DANGER: Discard all local, uncommitted changes in a file:</p>
+                            <div class="cmd-block pl-10 pr-12 py-3 border border-red-900 bg-red-950/20">
+                                <code class="text-red-400 font-bold text-base md:text-lg">git restore [file]</code>
+                                <button onclick="copyText('git restore file.txt')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"><i class="far fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 border-t border-white/10 text-center text-gray-500 text-sm bg-gray-950">
+        <p>&copy; 2026 Git Universe Workshop. Crafted for collaborative coding.</p>
+        <p class="mt-2 text-gray-400 font-bold">Presenters: M A Shriram | J V K Hem</p>
+    </footer>
+
+    <script>
+        // --- Smooth Scrolling ---
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // --- Scroll Reveal Animation ---
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            const elementVisible = 150;
+            
+            revealElements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - elementVisible) {
+                    el.classList.add('active');
+                }
+            });
+        }
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Trigger once on load
+
+        // --- Copy to Clipboard ---
+        function copyText(text) {
+            // Create temporary textarea
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            
+            // Show toast
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // --- Tab Logic ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Reset buttons
+                tabBtns.forEach(b => {
+                    b.classList.remove('text-blue-400', 'border-blue-500');
+                    b.classList.add('text-gray-400', 'border-transparent');
+                });
+                // Set active button
+                btn.classList.add('text-blue-400', 'border-blue-500');
+                btn.classList.remove('text-gray-400', 'border-transparent');
+
+                // Hide all panes
+                tabPanes.forEach(pane => pane.classList.add('hidden'));
+                
+                // Show target pane
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+        // --- Terminal Simulator Logic ---
+        const termContent = document.getElementById('terminal-content');
+        const termTyping = document.getElementById('terminal-typing');
+        const termScreen = document.getElementById('terminal-screen');
+        let isTyping = false;
+
+        // Simulations map. Some are single steps, others are arrays for sequential multi-step simulations.
+        const gitSimulations = {
+            'init': {
+                command: 'git init',
+                output: '<span class="text-green-400">Initialized empty Git repository in /home/workshop/project/.git/</span>'
+            },
+            'add': {
+                command: 'git add .',
+                output: '' 
+            },
+            'commit': {
+                command: 'git commit -m "Initial commit of workshop files"',
+                output: `<span class="text-gray-300">[main (root-commit) a1b2c3d] Initial commit of workshop files<br>
+                         3 files changed, 142 insertions(+)<br>
+                         create mode 100644 index.html<br>
+                         create mode 100644 style.css<br>
+                         create mode 100644 app.js</span>`
+            },
+            'branch': {
+                command: 'git checkout -b feature-dark-mode',
+                output: '<span class="text-gray-300">Switched to a new branch \'feature-dark-mode\'</span>'
+            },
+            'push': {
+                command: 'git push origin main',
+                output: `<span class="text-gray-300">Enumerating objects: 5, done.<br>
+                         Counting objects: 100% (5/5), done.<br>
+                         Delta compression using up to 8 threads<br>
+                         Compressing objects: 100% (3/3), done.<br>
+                         Writing objects: 100% (3/3), 324 bytes | 324.00 KiB/s, done.<br>
+                         Total 3 (delta 1), reused 0 (delta 0)<br>
+                         To https://github.com/user/repo.git<br>
+                         &nbsp;&nbsp;&nbsp;a1b2c3d..e4f5g6h  main -> main</span>`
+            },
+            // Multi-step array for complex merge conflict scenario
+            'merge': [
+                {
+                    command: 'git merge feature-auth',
+                    output: `<span class="text-gray-300">Auto-merging index.html</span><br>
+                             <span class="text-red-400 font-bold">CONFLICT (content): Merge conflict in index.html</span><br>
+                             <span class="text-red-400">Automatic merge failed; fix conflicts and then commit the result.</span>`,
+                    delayAfter: 2000
+                },
+                {
+                    command: 'cat index.html',
+                    output: `<span class="text-blue-400 font-bold">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span><br>
+                             <span class="text-gray-300">&lt;button class="btn-primary"&gt;Login&lt;/button&gt;</span><br>
+                             <span class="text-gray-500 font-bold">=======</span><br>
+                             <span class="text-green-400">&lt;button class="btn-dark"&gt;Sign In&lt;/button&gt;</span><br>
+                             <span class="text-blue-400 font-bold">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-auth</span>`,
+                    delayAfter: 3000
+                },
+                {
+                    command: 'nano index.html',
+                    output: '<span class="text-yellow-400 italic">... you open the file, delete the conflict markers, and save your combined changes ...</span>',
+                    delayAfter: 2000
+                },
+                {
+                    command: 'git add index.html',
+                    output: '',
+                    delayAfter: 1000
+                },
+                {
+                    command: 'git commit -m "Resolve merge conflict in index.html"',
+                    output: '<span class="text-gray-300">[main 8f9a2b1] Resolve merge conflict in index.html</span>',
+                    delayAfter: 0
+                }
+            ]
+        };
+
+        async function simulateGit(action) {
+            if (isTyping) return;
+            isTyping = true;
+            
+            // Normalize to array to handle multi-step actions cleanly
+            const simSteps = Array.isArray(gitSimulations[action]) ? gitSimulations[action] : [gitSimulations[action]];
+            
+            for (const step of simSteps) {
+                termTyping.innerHTML = '';
+                
+                // Type the command character by character
+                for (let i = 0; i < step.command.length; i++) {
+                    termTyping.innerHTML += step.command.charAt(i);
+                    await new Promise(r => setTimeout(r, 40)); // typing speed
+                }
+                
+                await new Promise(r => setTimeout(r, 300)); // Pause before execution
+                
+                // Move typed command to content history
+                termContent.innerHTML += `<div class="mt-2 flex"><span class="text-blue-400 mr-2 shrink-0">workshop@git-universe:~$</span><span class="text-white">${step.command}</span></div>`;
+                
+                // Clear typing area
+                termTyping.innerHTML = '';
+                
+                // Show output if any
+                if (step.output) {
+                    termContent.innerHTML += `<div class="mt-1">${step.output}</div>`;
+                }
+                
+                // Scroll to bottom
+                termScreen.scrollTop = termScreen.scrollHeight;
+
+                // Wait before starting the next step (if multi-step)
+                if (step.delayAfter) {
+                    await new Promise(r => setTimeout(r, step.delayAfter));
+                }
+            }
+
+            isTyping = false;
+        }
+    </script>
+</body>
+</html>

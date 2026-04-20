@@ -43,6 +43,13 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api")
 
+# Mount Gradio App
+from app.gradio_ui import create_gradio_interface
+import gradio as gr
+
+gradio_app = create_gradio_interface()
+app = gr.mount_gradio_app(app, gradio_app, path="/ui")
+
 
 @app.get("/", tags=["Health Check"])
 def read_root():

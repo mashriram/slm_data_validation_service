@@ -1,25 +1,23 @@
-# Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Copy only the requirements file to leverage Docker layer caching
-COPY requirements.txt .
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:0.5.21 /uv /uvx /bin/
 
-# Copy the application code into the container
-COPY ./app /app/app
+# Copy dependencies definitions
+COPY pyproject.toml uv.lock ./
 
-# Port the service will run on
-EXPOSE 8000
+# Install dependencies using uv into system environment
+RUN uv sync --frozen --no-cache
 
-# Command to run the application using Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+COPY . /app
+
+EXPOSE 8002
+
+CMD ["/app/.venv/bin/uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--workers", "4"]
