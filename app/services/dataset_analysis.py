@@ -78,9 +78,13 @@ class DatasetAnalysisService:
             deductions.append("Dataset is on the smaller side. Consider augmenting.")
             
         # 3. Format Penalty
-        if not metrics.get('has_instruction_format'):
+        has_fmt = metrics.get('has_instruction_format')
+        task_detected = metrics.get('detected_task_type', 'unknown')
+        if not has_fmt:
              score -= 25
-             deductions.append("Lacks clear Instruction/Output structure. May require extensive formatting for SFT.")
+             deductions.append("Lacks clear Instruction/Output structure or alignment keys (chosen/rejected or ground_truth). May require formatting.")
+        else:
+             deductions.append(f"Format looks great! Detected alignment task format: {task_detected.upper()}.")
 
         # 4. Sequence Length Limit Penalty (Target Model)
         max_len = metrics.get('sequence_metrics', {}).get('max_length', 0)
@@ -178,21 +182,36 @@ class DatasetAnalysisService:
             }
 
             # --- 2. Analyze Column Structure & Content across interleaved data ---
-            # We look at the first dataset's features to determine primary text columns
             columns = combined_samples[0].keys()
             analysis_result["columns"] = [c for c in columns if c != '_source_dataset_']
             
             text_columns = [col for col in columns if isinstance(combined_samples[0][col], str) and col != '_source_dataset_']
             
             has_instruction = any(col.lower() in ["instruction", "prompt", "question"] for col in columns)
-            has_output = any(col.lower() in ["output", "response", "answer"] for col in columns)
-            
-            analysis_result["has_instruction_format"] = has_instruction and has_output
+            has_output = any(col.lower() in ["output", "response", "answer", "completion"] for col in columns)
+            has_chosen = "chosen" in columns
+            has_rejected = "rejected" in columns
+            has_ground_truth = any(col.lower() in ["ground_truth", "rubric", "target"] for col in columns)
 
-            if has_instruction and has_output:
-                analysis_result["recommendations"].append("Dataset combination has Instruction/Output format suitable for SFT.")
-            elif "text" in columns:
-                 analysis_result["recommendations"].append("Datasets have a 'text' column. Suitable for Pre-training or requires format conversion for SFT.")
+            detected_task = "sft"
+            if has_chosen and has_rejected:
+                 detected_task = "dpo"
+                 analysis_result["has_instruction_format"] = True
+                 analysis_result["recommendations"].append("Dataset has chosen & rejected preference splits. Perfectly formatted for DPO (Direct Preference Optimization).")
+            elif has_ground_truth:
+                 detected_task = "grpo"
+                 analysis_result["has_instruction_format"] = True
+                 analysis_result["recommendations"].append("Dataset has ground_truth rubrics. Perfect for GRPO (Group Relative Policy Optimization) or RLVR.")
+            elif has_instruction and has_output:
+                 detected_task = "sft"
+                 analysis_result["has_instruction_format"] = True
+                 analysis_result["recommendations"].append("Dataset has standard prompt/completion or question/answer format suitable for SFT (Supervised Fine-Tuning).")
+            else:
+                 detected_task = "pretrain"
+                 analysis_result["has_instruction_format"] = False
+                 analysis_result["recommendations"].append("Dataset lacks direct task key splits. Suitable for generic language model pre-training.")
+
+            analysis_result["detected_task_type"] = detected_task
 
             # Identify target text for deep analysis
             target_col = None

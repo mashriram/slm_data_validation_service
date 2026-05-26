@@ -107,6 +107,7 @@ async def analyze_datasets_gradio(dataset_state_json, target_model, request: gr.
         summary_md += f"\n**Total Analyzed Rows:** {result.get('total_rows', 0):,}\n"
         summary_md += f"**Target Model:** `{result.get('target_model', 'N/A')}`\n"
         summary_md += f"**Analyzed Columns:** `{', '.join(result.get('columns', []))}`\n"
+        summary_md += f"**Detected Alignment Format:** `{result.get('detected_task_type', 'sft').upper()}`\n"
         
         # 2. Format Recommendations & Rating deductions
         rec_md = "### 💡 Analysis & Deductions\n\n"
